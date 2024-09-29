@@ -4,7 +4,6 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import Active from './components/Active';
 import Completed from './components/Completed';
 import AllTask from './components/AllTask';
-import Layout from './components/Layout';
 import TaskContext from './context/TaskContext';
 import TokenContext from './context/TokenContext';
 import taskReducer from './reducer/taskReducer';
@@ -17,6 +16,8 @@ import ForgotPassword from './components/forgotPassword/ForgotPassword';
 import ResetPassword from './components/forgotPassword/ResetPassword';
 import axios from './Axios/axios.js';
 import { Toaster } from 'sonner';
+import Otp from './components/otp.jsx';
+import SocketLayout from './components/Layout';
 
 function App() {
   const token = JSON.parse(localStorage.getItem("authToken"));
@@ -74,7 +75,7 @@ function App() {
           <Toaster duration={1500} position="top-right" richColors={true} />
           <Routes>
             <Route path="/" element={<Header />}>
-              <Route path="/" element={token ? <Layout /> : <Login />}>
+              <Route path="/" element={token ? <SocketLayout/> : <Login />}>
                 <Route index element={<AllTask />} />
                 <Route path="active" element={<Active />} />
                 <Route path="completed" element={<Completed />} />
@@ -83,6 +84,7 @@ function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/forgotPassword" element={<ForgotPassword />} />
               <Route path="/resetPassword" element={<ResetPassword />} />
+              <Route path='/otp' element={<Otp/>}/>
             </Route>
           </Routes>
         </TaskContext.Provider>

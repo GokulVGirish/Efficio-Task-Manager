@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import axios from "../../Axios/axios.js";
+import { useNavigate } from 'react-router-dom';
 
 function ForgotPassword() {
     const [email, setEmail] = useState("");
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false)
+    const navigate=useNavigate()
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -16,7 +18,9 @@ function ForgotPassword() {
             const res = await axios.post("/forgotPassword/forgotPassword", {email})
             console.log(res);
             setMessage(res.data.message);
+
             console.log(res.data.message);
+            navigate("/login")
         } catch (error) {
             setError(error.response.data.message)
             console.log(error);
@@ -26,7 +30,7 @@ function ForgotPassword() {
         }
     }
     return (
-        <div className="text-center">
+        <div className="text-center mt-3">
             <h1 className="text-xl font-bold p-5">Forgot Password</h1>
             <form className="w-2/5 mx-auto p-5" onSubmit={handleSubmit}>
                 <input type="email"

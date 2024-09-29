@@ -3,6 +3,7 @@ import TaskIndicator from './TaskIndicator';
 import CreateTask from './createTask/CreateTask';
 import { Outlet } from 'react-router-dom';
 import BarChart from './Chart';
+import SocketProvider from '../socket.io/socketIo';
 function Layout() {
     return (
       <div>
@@ -24,4 +25,11 @@ function Layout() {
     );
 }
 
-export default Layout;
+ const SocketLayout=()=>{
+  return (
+    <SocketProvider>
+      <Layout/>
+    </SocketProvider>
+  )
+}
+export default SocketLayout

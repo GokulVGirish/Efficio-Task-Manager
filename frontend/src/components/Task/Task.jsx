@@ -1,4 +1,4 @@
-import React, { useLayoutEffect } from "react";
+import React, { useEffect, useLayoutEffect } from "react";
 import moment from "moment";
 import "./task.css";
 import { useContext, useState } from "react";
@@ -8,6 +8,7 @@ import instance from "../../Axios/axios";
 import { toast } from "sonner";
 import EditIcon from "@mui/icons-material/Edit";
 import Swal from "sweetalert2";
+import { socketContext } from "../../socket.io/socketIo";
 
 function Task({ task, id }) {
   const { dispatch, editingImage, setEditingImage, tasks } =
@@ -15,6 +16,7 @@ function Task({ task, id }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const token = JSON.parse(localStorage.getItem("authToken"));
+  const Socket=useContext(socketContext)
 
   const handleRemove = async (e) => {
     e.preventDefault();
@@ -23,12 +25,7 @@ function Task({ task, id }) {
       data: { id: id },
       headers: { Authorization: `Bearer ${token}` },
     });
-    toast.success("Task Removed Sucessfully");
-
-    dispatch({
-      type: "REMOVE_TASK",
-      id,
-    });
+   
   };
 
   const handleMarkDone = async (e) => {
@@ -51,12 +48,7 @@ function Task({ task, id }) {
             },
           }
         );
-        toast.success("Task Completed Sucessfully");
-
-        dispatch({
-          type: "MARK_DONE",
-          id,
-        });
+       
       }
     });
   };
@@ -66,7 +58,7 @@ function Task({ task, id }) {
     if (!description.trim()) return toast.error("Give a valid description");
 
     try {
-      const response = await instance.put(
+       await instance.put(
         `/task/edit/${editingImage}`,
         { title, description },
         {
@@ -75,26 +67,62 @@ function Task({ task, id }) {
           },
         }
       );
-      if (response.data.success) {
-        toast.success("sucessfully updated");
-        const updatedTasks = tasks.map((task) =>
-          task._id === editingImage ? { ...task, title, description } : task
-        );
-
-        dispatch({ type: "SET_TASK", payload: updatedTasks });
-      }
+    
     } catch (error) {
       toast.error(error.response.data.message);
-    } finally {
-      setEditingImage(null);
-    }
+    } 
   };
   useLayoutEffect(() => {
     setTitle(task.title);
     setDescription(task.description);
-  }, []);
+  }, [task.title,task.description]);
 
-  console.log("my tasks", tasks);
+  useEffect(()=>{
+
+    if(Socket){
+      Socket.on("removeTask",({id})=>{
+
+         toast.success("Task Removed Sucessfully");
+
+         dispatch({
+           type: "REMOVE_TASK",
+           id,
+         });
+
+      })
+      Socket.on("handleSave",async({title,description})=>{
+        console.log("title ",title,description,editingImage)
+
+          toast.success("sucessfully updated");
+          const updatedTasks = tasks.map((task) =>
+            task._id === editingImage ? { ...task, title, description } : task
+          );
+
+          await dispatch({ type: "SET_TASK", payload: updatedTasks });
+          setEditingImage(null)
+
+      })
+      Socket.on("markDone",({id})=>{
+         toast.success("Task Completed Sucessfully");
+
+         dispatch({
+           type: "MARK_DONE",
+           id,
+         });
+      })
+    }
+
+    return ()=>{
+      Socket?.off("removeTask")
+      Socket?.off("handleSave")
+      Socket?.off("markDone")
+    }
+
+  },[Socket,editingImage,dispatch,setEditingImage,tasks])
+
+  console.log("my tasks",editingImage);
+
+
 
   return (
     <div className="bg-white py-4 px-6 rounded-lg shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 transition-transform transform hover:scale-105 duration-200">

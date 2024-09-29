@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useContext } from 'react';
 import TaskContext from '../../context/TaskContext';
 import TokenContext from '../../context/TokenContext';
 import axios from "../../Axios/axios.js"
 import "./createTask.css"
 import { toast } from 'sonner';
+import { socketContext } from '../../socket.io/socketIo.jsx';
 function CreateTask() {
     const { dispatch } = useContext(TaskContext)
     const {userToken} = useContext(TokenContext)
+    const Socket=useContext(socketContext)
+    
     const [title, setTitle] = useState("")
     const [description, setDescription] = useState("")
   
@@ -17,25 +20,37 @@ function CreateTask() {
         if(!description.trim()) return toast.error("Give a valid description");
        
         try {
-            const res = await axios.post("/task/addTask", {title, description},{
+             await axios.post("/task/addTask", {title, description},{
               headers: {
                 Authorization: `Bearer ${userToken}`
               }
             })
-            toast.success("Sucessfully Added Task");
-             dispatch({
-            type: "ADD_TASK",
-           data:res.data.data
-        })
+          
         setTitle("")
         setDescription("")
-            //setToast(res.data)
-            // showToast();
+         
           } catch (error) {
             console.log(error);
           }
        
     }
+    useEffect(()=>{
+        console.log("socket",Socket)
+        if(Socket){
+           
+            Socket.on("addTask", (data) => {
+              toast.success("Sucessfully Added Task");
+              dispatch({
+                type: "ADD_TASK",
+                data: data,
+              });
+            });
+        }
+         return () => {
+           Socket?.off("addTask");
+         };
+
+    },[Socket,dispatch])
     return (
         <div className="addContainer md:w-1/3 md:mx-auto mx-3 mt-3 flex justify-center">
             <div className='w-11/12 mt-6 '>

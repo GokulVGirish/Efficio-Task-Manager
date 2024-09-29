@@ -1,13 +1,21 @@
 import React from 'react';
 import { useState, useContext } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import axios from "../Axios/axios.js"
 import TokenContext from '../context/TokenContext.js';
 import logo from "../images/efficioLogo.png"
+import { FaRegEye,FaEyeSlash } from "react-icons/fa6";
+import { toast } from 'sonner';
 function Register() {
     const [formData, setFormData] = useState({})
-    const {userToken, tokenDispatch, userDispatch } = useContext(TokenContext);
+    const {userToken } = useContext(TokenContext);
     const [error, setError] = useState();
+      const [showPassword, setShowPassword] = useState(false);
+
+      const handleTogglePassword = () => {
+        setShowPassword((prev) => !prev); 
+      };
+    const navigate=useNavigate()
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
@@ -15,13 +23,16 @@ function Register() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const result = await axios.post("/user/register", formData)
-            tokenDispatch({ type: "SET_TOKEN", payload: result.data.token })
-            userDispatch({ type: "SET_USER", payload: result.data.user })
-            localStorage.setItem("authToken", JSON.stringify(result.data.token))
+            await axios.post("/user/otpSignup", formData)
+           toast.success("Otp Sucessfully Sent",{onAutoClose:()=>{
+             localStorage.setItem("otpEmail", JSON.stringify(formData.email));
+             navigate("/otp");
+          
+           }})
+          
         } catch (error) {
             console.log(error);
-            setError({ message: error.response.data.message })
+            setError({ message: error.response?.data?.message })
         }
     }
    return (
@@ -69,17 +80,29 @@ function Register() {
                    />
                  </div>
 
-                 <div className="mb-6">
+                 <div className="mb-6 relative">
+                   {" "}
+                   {/* Set position to relative for the eye icon */}
                    <input
-                     type="password"
+                     type={showPassword ? "text" : "password"} // Toggle between text and password
                      name="password"
                      className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition duration-200 ease-in-out"
                      placeholder="Password"
                      onChange={handleChange}
                    />
-                 </div>
+                   <button
+                     type="button"
+                     className="absolute right-3 top-1/2 transform -translate-y-1/2" // Position the icon
+                     onClick={handleTogglePassword}
+                   >
+                     {showPassword ? (
+                       <FaEyeSlash />
+                     ) : (
+                      <FaRegEye/>
 
-                
+                     )}
+                   </button>
+                 </div>
 
                  <button
                    type="submit"

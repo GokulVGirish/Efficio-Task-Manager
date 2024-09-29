@@ -22,6 +22,7 @@ function ResetPassword() {
             try {
                 const token = searchParams.get("token");
                 const res = await axios.post("/forgotPassword/resetPassword", {token, password })
+                window.close()
                 setMessage(res.data.message);
             } catch (error) {
                 setError(error.response.data.message)

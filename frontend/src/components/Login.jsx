@@ -1,19 +1,32 @@
 import React, { useState, useContext } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import axios from "../Axios/axios.js"
 import TokenContext from '../context/TokenContext.js';
 import logo from "../images/efficioLogo.png"
+import { toast } from 'sonner';
+import { FaEyeSlash, FaRegEye } from 'react-icons/fa6';
 function Login() {
     const [formData, setFormData] = useState({});
     const { userToken, tokenDispatch, userDispatch } = useContext(TokenContext);
     const [error, setError] = useState();
+     const [showPassword, setShowPassword] = useState(false);
+
+     const handleTogglePassword = () => {
+       setShowPassword((prev) => !prev);
+     };
+    const navigate=useNavigate()
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
             const result = await axios.post("/user/login", formData)
-            tokenDispatch({ type: "SET_TOKEN", payload: result.data.token })
+            toast.success("logged in sucessfully",{onAutoClose:()=>{
+                  tokenDispatch({ type: "SET_TOKEN", payload: result.data.token })
             userDispatch({ type: "SET_USER", payload: result.data.user })
             localStorage.setItem("authToken",JSON.stringify(result.data.token))
+              navigate("/")
+
+            }})
+        
         } catch (error) {
             console.log(error);
             setError({ message: error.response.data.message })
@@ -61,18 +74,26 @@ function Login() {
                     />
                   </div>
 
-                  <div className="mb-6">
+                  <div className="mb-6 relative">
+                    {" "}
+                    {/* Set position to relative for the eye icon */}
                     <input
-                      type="password"
+                      type={showPassword ? "text" : "password"} // Toggle between text and password
                       name="password"
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 text-lg text-gray-700 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition duration-200 ease-in-out"
                       placeholder="Password"
+                      onChange={handleChange}
                     />
+                    <button
+                      type="button"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2" // Position the icon
+                      onClick={handleTogglePassword}
+                    >
+                      {showPassword ? <FaEyeSlash /> : <FaRegEye />}
+                    </button>
                   </div>
 
                   <div className="flex justify-between items-center mb-6">
-                  
                     <Link
                       to="/forgotPassword"
                       className="text-blue-600 hover:underline"
